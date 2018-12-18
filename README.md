@@ -3,10 +3,10 @@
 ## IG: instagram.com/linux_choice
 ### Don't copy this code without give me the credits, nerd! 
 
-Script to generate a Win32 payload that can take images from the WebCam and send it to the attacker
+Script to generate a Win32 payload that takes the webcam image every 1 minute and send it to the attacker
 
 ### Features:
-### Takes image from WebCam on each 1 minute
+### Takes the webcam image every 1 minute
 ### Works on WAN: Port Forwarding by Serveo.net
 ### Fully Undetectable (FUD) -> Don't Upload to virustotal.com!
 
